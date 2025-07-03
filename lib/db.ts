@@ -1,9 +1,8 @@
 /*
- * Serverless Postgres client backed by HTTP-fetch (works in edge / browser
- * previews).  We expose a minimal `{ query(text, params) }` facade so the
- * rest of the codebase remains unchanged.
+ * Serverless-friendly Postgres helper using the Neon HTTP driver.
+ * Keeps the familiar `{ query(text, params) }` API used elsewhere.
  *
- * Docs: https://github.com/neondatabase/serverless
+ * Docs → https://github.com/neondatabase/serverless
  */
 import { neon } from "@neondatabase/serverless"
 
@@ -13,11 +12,14 @@ if (!process.env.DATABASE_URL) {
 
 const sql = neon(process.env.DATABASE_URL)
 
-// Keep the pg-style interface used elsewhere
+/**
+ * pg-compatible wrapper.
+ * Example: pool.query('SELECT * FROM admins WHERE email = $1', [email])
+ */
 export default {
-  // text: 'SELECT * FROM admins WHERE email = $1', params: ['foo@bar.com']
-  query: async (text: string, params: any[] = []) => {
-    const rows = await (sql as any).unsafe(text, params)
+  async query(text: string, params: any[] = []) {
+    // neon 0.6+: use `.query()` for conventional text/params calls
+    const rows = await sql.query(text, params)
     return { rows }
   },
 }

@@ -1,7 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import pool from "@/lib/db"
 import { verifyToken } from "@/lib/auth"
-import { sendTicketStatusUpdateMessage } from "@/lib/automated-messages"
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -19,39 +18,34 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // IMPORTANT ─ always await verifyToken
     const decoded = await verifyToken(token)
     if (!decoded) {
       return NextResponse.json({ error: "Invalid token" }, { status: 401 })
     }
 
+    // Get all messages for this ticket
     const result = await pool.query(
       `
       SELECT 
-        t.*,
-        c.name as category_name,
-        c.color as category_color,
-        a.name as assigned_admin_name
-      FROM tickets t
-      LEFT JOIN categories c ON t.category_id = c.id
-      LEFT JOIN admins a ON t.assigned_admin_id = a.id
-      WHERE t.id = $1 AND t.category_id = $2
+        tc.*,
+        a.name as admin_name,
+        a.email as admin_email
+      FROM ticket_comments tc
+      LEFT JOIN admins a ON tc.admin_id = a.id
+      WHERE tc.ticket_id = $1
+      ORDER BY tc.created_at ASC
     `,
-      [params.id, decoded.category_id],
+      [params.id],
     )
 
-    if (result.rows.length === 0) {
-      return NextResponse.json({ error: "Ticket not found" }, { status: 404 })
-    }
-
-    return NextResponse.json(result.rows[0])
+    return NextResponse.json(result.rows)
   } catch (error) {
-    console.error("Get ticket error:", error)
+    console.error("Get messages error:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
 
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     // Get token from cookie or Authorization header
     let token = request.cookies.get("auth-token")?.value
@@ -67,39 +61,33 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // IMPORTANT ─ always await verifyToken
     const decoded = await verifyToken(token)
     if (!decoded) {
       return NextResponse.json({ error: "Invalid token" }, { status: 401 })
     }
 
-    const { status, priority } = await request.json()
+    const { message, is_internal = false, attachments = [] } = await request.json()
 
-    // Get admin name for automated messages
-    const adminResult = await pool.query("SELECT name FROM admins WHERE id = $1", [decoded.id])
-    const adminName = adminResult.rows[0]?.name || "Support Team"
-
-    const result = await pool.query(
-      `
-      UPDATE tickets 
-      SET status = $1, priority = $2, updated_at = CURRENT_TIMESTAMP,
-          resolved_at = CASE WHEN $1 = 'closed' THEN CURRENT_TIMESTAMP ELSE resolved_at END
-      WHERE id = $3
-      RETURNING *
-    `,
-      [status, priority, params.id],
-    )
-
-    if (result.rows.length === 0) {
-      return NextResponse.json({ error: "Ticket not found" }, { status: 404 })
+    if (!message && (!attachments || attachments.length === 0)) {
+      return NextResponse.json({ error: "Message or attachment is required" }, { status: 400 })
     }
 
-    // Send automated status update message
-    await sendTicketStatusUpdateMessage(Number.parseInt(params.id), status, adminName)
+    // Insert the message
+    const result = await pool.query(
+      `
+      INSERT INTO ticket_comments (ticket_id, admin_id, comment, is_internal, attachments)
+      VALUES ($1, $2, $3, $4, $5)
+      RETURNING *
+    `,
+      [params.id, decoded.id, message || "", is_internal, JSON.stringify(attachments)],
+    )
 
-    return NextResponse.json(result.rows[0])
+    // Update ticket's updated_at timestamp
+    await pool.query("UPDATE tickets SET updated_at = CURRENT_TIMESTAMP WHERE id = $1", [params.id])
+
+    return NextResponse.json(result.rows[0], { status: 201 })
   } catch (error) {
-    console.error("Update ticket error:", error)
+    console.error("Create message error:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

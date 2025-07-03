@@ -3,6 +3,7 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -32,6 +33,7 @@ export default function HomePage() {
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const { toast } = useToast()
+  const router = useRouter()
 
   useEffect(() => {
     fetchCategories()
@@ -40,12 +42,18 @@ export default function HomePage() {
   const fetchCategories = async () => {
     try {
       const response = await fetch("/api/categories")
-      if (response.ok) {
-        const data = await response.json()
-        setCategories(data)
+      const data = await response.json()
+
+      // Accept the data only if it's an array; otherwise fall back to []
+      if (Array.isArray(data)) {
+        setCategories(data as Category[])
+      } else {
+        console.error("Unexpected categories payload:", data)
+        setCategories([])
       }
     } catch (error) {
       console.error("Error fetching categories:", error)
+      setCategories([])
     }
   }
 
@@ -66,20 +74,15 @@ export default function HomePage() {
       })
 
       if (response.ok) {
+        const newTicket = await response.json()
         toast({
           title: "Ticket Created",
           description:
             "Your support ticket has been submitted successfully. You'll receive an email confirmation shortly.",
         })
-        setFormData({
-          title: "",
-          description: "",
-          customer_name: "",
-          customer_email: "",
-          customer_phone: "",
-          category_id: "",
-          priority: "medium",
-        })
+
+        // Redirect to customer portal
+        router.push(`/ticket/${newTicket.id}`)
       } else {
         throw new Error("Failed to create ticket")
       }
@@ -209,14 +212,19 @@ export default function HomePage() {
                         <SelectValue placeholder="Select a category" />
                       </SelectTrigger>
                       <SelectContent>
-                        {categories.map((category) => (
-                          <SelectItem key={category.id} value={category.id.toString()}>
-                            <div className="flex items-center">
-                              <div className="w-3 h-3 rounded-full mr-2" style={{ backgroundColor: category.color }} />
-                              {category.name}
-                            </div>
-                          </SelectItem>
-                        ))}
+                        {Array.isArray(categories) &&
+                          categories.map((category) => (
+                            <SelectItem key={category.id} value={category.id.toString()}>
+                              <div className="flex items-center">
+                                <div
+                                  className="w-3 h-3 rounded-full mr-2"
+                                  style={{ backgroundColor: category.color }}
+                                />
+                                {category.name}
+                              </div>
+                            </SelectItem>
+                          ))}
+                        {categories.length === 0 && <p className="text-sm text-gray-500">No categories found.</p>}
                       </SelectContent>
                     </Select>
                   </div>
@@ -273,19 +281,21 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h3 className="text-2xl font-bold text-center mb-8">Support Categories</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {categories.map((category) => (
-              <Card key={category.id}>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <div className="w-4 h-4 rounded-full mr-2" style={{ backgroundColor: category.color }} />
-                    {category.name}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-gray-600">{category.description}</p>
-                </CardContent>
-              </Card>
-            ))}
+            {Array.isArray(categories) &&
+              categories.map((category) => (
+                <Card key={category.id}>
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <div className="w-4 h-4 rounded-full mr-2" style={{ backgroundColor: category.color }} />
+                      {category.name}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-gray-600">{category.description}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            {categories.length === 0 && <p className="text-sm text-gray-500">No categories found.</p>}
           </div>
         </div>
       </section>

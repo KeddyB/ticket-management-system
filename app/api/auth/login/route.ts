@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid credentials" }, { status: 401 })
     }
 
-    const token = generateToken(admin)
+    const token = await generateToken(admin)
 
     const response = NextResponse.json({
       message: "Login successful",
@@ -26,14 +26,20 @@ export async function POST(request: NextRequest) {
         role: admin.role,
         category_id: admin.category_id,
       },
+      token, // Include token in response
     })
 
+    // Set cookie with more permissive settings for development
     response.cookies.set("auth-token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 86400, // 24 hours
+      httpOnly: false, // Allow client-side access for debugging
+      secure: false,
+      sameSite: "lax",
+      maxAge: 86400,
+      path: "/",
     })
+
+    console.log("Login successful for:", email)
+    console.log("Token set in cookie")
 
     return response
   } catch (error) {

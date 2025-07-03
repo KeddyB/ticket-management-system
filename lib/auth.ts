@@ -28,13 +28,14 @@ export async function generateToken(admin: Admin): Promise<string> {
     category_id: admin.category_id,
     role: admin.role,
   } as JWTPayload)
+    .setProtectedHeader({ alg: "HS256", typ: "JWT" }) // ✅ REQUIRED HEADER
     .setExpirationTime("24h")
     .sign(JWT_SECRET)
 }
 
 export async function verifyToken(token: string): Promise<null | JWTPayload> {
   try {
-    const { payload } = await jwtVerify(token, JWT_SECRET)
+    const { payload } = await jwtVerify(token, JWT_SECRET, { algorithms: ["HS256"] })
     return payload
   } catch {
     return null

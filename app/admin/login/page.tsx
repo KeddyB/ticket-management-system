@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Shield, ArrowLeft } from "lucide-react"
+import { Shield, ArrowLeft, Settings } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import Link from "next/link"
 
@@ -24,6 +24,8 @@ export default function AdminLogin() {
     setIsLoading(true)
 
     try {
+      console.log("Attempting login for:", email)
+
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: {
@@ -32,22 +34,37 @@ export default function AdminLogin() {
         body: JSON.stringify({ email, password }),
       })
 
+      const data = await response.json()
+      console.log("Login response:", response.status, data)
+
       if (response.ok) {
-        const data = await response.json()
         toast({
           title: "Login Successful",
           description: `Welcome back, ${data.admin.name}!`,
         })
-        router.push("/admin/dashboard")
+
+        // Store token in localStorage and cookie manually
+        if (data.token) {
+          localStorage.setItem("auth-token", data.token)
+          // Also set cookie manually via document.cookie as backup
+          document.cookie = `auth-token=${data.token}; path=/; max-age=86400; SameSite=Lax`
+          console.log("Token stored in localStorage and cookie")
+        }
+
+        // Small delay to ensure storage is complete
+        setTimeout(() => {
+          console.log("Redirecting to dashboard")
+          window.location.href = "/admin/dashboard"
+        }, 500)
       } else {
-        const error = await response.json()
         toast({
           title: "Login Failed",
-          description: error.error || "Invalid credentials",
+          description: data.error || "Invalid credentials",
           variant: "destructive",
         })
       }
     } catch (error) {
+      console.error("Login error:", error)
       toast({
         title: "Error",
         description: "An error occurred during login",
@@ -56,6 +73,12 @@ export default function AdminLogin() {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  // Helper function to fill demo credentials
+  const fillDemoCredentials = (email: string) => {
+    setEmail(email)
+    setPassword("admin123")
   }
 
   return (
@@ -104,13 +127,43 @@ export default function AdminLogin() {
               </Button>
             </form>
 
-            <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-              <p className="text-sm text-gray-600 mb-2">Demo Admin Accounts:</p>
-              <div className="text-xs space-y-1">
-                <div>Tech Support: tech@company.com</div>
-                <div>Billing: billing@company.com</div>
-                <div>General: general@company.com</div>
-                <div>Password: admin123</div>
+            <div className="mt-6 space-y-4">
+              <div className="text-center">
+                <Link href="/setup" className="inline-flex items-center text-sm text-blue-600 hover:text-blue-700">
+                  <Settings className="h-4 w-4 mr-1" />
+                  Need to setup demo accounts?
+                </Link>
+              </div>
+
+              <div className="p-4 bg-gray-50 rounded-lg">
+                <p className="text-sm text-gray-600 mb-3">Demo Admin Accounts (click to auto-fill):</p>
+                <div className="text-xs space-y-2">
+                  <button
+                    type="button"
+                    onClick={() => fillDemoCredentials("tech@company.com")}
+                    className="block w-full text-left p-2 hover:bg-gray-100 rounded"
+                  >
+                    <div className="font-medium">Tech Support</div>
+                    <div className="text-gray-500">tech@company.com</div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => fillDemoCredentials("billing@company.com")}
+                    className="block w-full text-left p-2 hover:bg-gray-100 rounded"
+                  >
+                    <div className="font-medium">Billing</div>
+                    <div className="text-gray-500">billing@company.com</div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => fillDemoCredentials("general@company.com")}
+                    className="block w-full text-left p-2 hover:bg-gray-100 rounded"
+                  >
+                    <div className="font-medium">General</div>
+                    <div className="text-gray-500">general@company.com</div>
+                  </button>
+                  <div className="text-center text-gray-500 mt-2">Password: admin123</div>
+                </div>
               </div>
             </div>
           </CardContent>
