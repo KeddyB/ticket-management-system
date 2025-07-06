@@ -6,11 +6,11 @@ import { sendStatusChangeMessage } from "@/lib/automated-messages"
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    console.log("Ticket API: Starting GET request for ticket:", params.id)
+    //console.log("Ticket API: Starting GET request for ticket:", params.id)
 
     // Validate ticket ID format
     if (!params.id || !/^\d+$/.test(params.id)) {
-      console.log("Ticket API: Invalid ticket ID format:", params.id)
+      //console.log("Ticket API: Invalid ticket ID format:", params.id)
       return NextResponse.json({ error: "Invalid ticket ID" }, { status: 400 })
     }
 
@@ -42,7 +42,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
         [params.id],
       )
     } catch (error) {
-      console.log("Ticket API: Categories table not found, using fallback")
+      //console.log("Ticket API: Categories table not found, using fallback")
       result = await pool.query(
         `
         SELECT 
@@ -71,7 +71,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     }
 
     const ticket = result.rows[0]
-    console.log("Ticket API: Found ticket:", ticket.id)
+    //console.log("Ticket API: Found ticket:", ticket.id)
 
     const formattedTicket = {
       id: ticket.id,
@@ -103,11 +103,11 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 // PUT – update status, assignment, or priority
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    console.log("Ticket API: Starting PUT request for ticket:", params.id)
+    //console.log("Ticket API: Starting PUT request for ticket:", params.id)
 
     // Validate ticket ID format
     if (!params.id || !/^\d+$/.test(params.id)) {
-      console.log("Ticket API: Invalid ticket ID format:", params.id)
+      //console.log("Ticket API: Invalid ticket ID format:", params.id)
       return NextResponse.json({ error: "Invalid ticket ID" }, { status: 400 })
     }
 
@@ -122,7 +122,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     }
 
     const body = await request.json()
-    console.log("Ticket API: Update data:", body)
+    //console.log("Ticket API: Update data:", body)
 
     const { status, assigned_admin_id, priority, title, description } = body
 
@@ -196,8 +196,8 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       RETURNING *
     `
 
-    console.log("Ticket API: Executing query:", query)
-    console.log("Ticket API: With values:", values)
+    //console.log("Ticket API: Executing query:", query)
+    //console.log("Ticket API: With values:", values)
 
     const result = await pool.query(query, values)
 
@@ -206,13 +206,13 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     }
 
     const updatedTicket = result.rows[0]
-    console.log("Ticket API: Updated ticket:", updatedTicket.id)
+    //console.log("Ticket API: Updated ticket:", updatedTicket.id)
 
     // Send automated status change message if status changed
     if (status !== undefined && oldStatus && oldStatus !== status) {
       try {
         await sendStatusChangeMessage(params.id, oldStatus, status)
-        console.log("Ticket API: Status change message sent")
+        //console.log("Ticket API: Status change message sent")
       } catch (error) {
         console.error("Ticket API: Failed to send status change message:", error)
         // Don't fail the update if automated message fails

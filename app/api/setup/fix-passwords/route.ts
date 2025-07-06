@@ -9,7 +9,7 @@ export async function POST() {
 
     // First, let's see what admins exist
     const existingAdmins = await pool.query("SELECT id, email, name FROM admins")
-    console.log("Existing admins:", existingAdmins.rows)
+    //console.log("Existing admins:", existingAdmins.rows)
 
     // Update all admin passwords
     const updateResult = await pool.query(
@@ -20,7 +20,7 @@ export async function POST() {
 
     // If no rows were updated, create a test admin
     if (updateResult.rowCount === 0) {
-      console.log("No existing admins found, creating test admin...")
+      //console.log("No existing admins found, creating test admin...")
 
       // Ensure admins table exists with proper structure
       await pool.query(`
@@ -43,15 +43,15 @@ export async function POST() {
         ["admin@test.com", passwordHash, "Test Admin", "admin", true],
       )
 
-      console.log("Created test admin: admin@test.com")
+      //console.log("Created test admin: admin@test.com")
     }
 
     // Verify the update worked
     const verifyResult = await pool.query("SELECT email, name, password_hash FROM admins LIMIT 5")
-    console.log(
-      "Verification - admins after update:",
-      verifyResult.rows.map((r) => ({ email: r.email, name: r.name, hasHash: !!r.password_hash })),
-    )
+    // //console.log(
+    //   "Verification - admins after update:",
+    //   verifyResult.rows.map((r) => ({ email: r.email, name: r.name, hasHash: !!r.password_hash })),
+    // )
 
     return NextResponse.json({
       message: "Passwords updated successfully",

@@ -9,7 +9,7 @@ const AUTOMATED_MESSAGES = {
 
 export async function sendAutomatedWelcomeMessage(ticketId: string) {
   try {
-    console.log("Automated Messages: Sending welcome message for ticket:", ticketId)
+    //console.log("Automated Messages: Sending welcome message for ticket:", ticketId)
 
     // Get the first admin to send the message as
     const adminResult = await pool.query("SELECT id, name, email FROM admins WHERE is_active = true LIMIT 1")
@@ -20,7 +20,7 @@ export async function sendAutomatedWelcomeMessage(ticketId: string) {
     }
 
     const admin = adminResult.rows[0]
-    console.log("Automated Messages: Using admin:", admin.name || admin.email)
+    //console.log("Automated Messages: Using admin:", admin.name || admin.email)
 
     // Get ticket details for personalization
     const ticketResult = await pool.query("SELECT customer_name FROM tickets WHERE id = $1", [ticketId])
@@ -53,7 +53,7 @@ Support Team`
       [ticketId, admin.id, welcomeMessage, JSON.stringify([]), false],
     )
 
-    console.log("Automated Messages: Welcome message sent successfully")
+    //console.log("Automated Messages: Welcome message sent successfully")
   } catch (error) {
     console.error("Automated Messages: Failed to send welcome message:", error)
     // Don't throw error - automated messages are not critical
@@ -62,7 +62,7 @@ Support Team`
 
 export async function sendStatusChangeMessage(ticketId: string, oldStatus: string, newStatus: string) {
   try {
-    console.log("Automated Messages: Sending status change message for ticket:", ticketId)
+    //console.log("Automated Messages: Sending status change message for ticket:", ticketId)
 
     // Get the first admin to send the message as
     const adminResult = await pool.query("SELECT id, name, email FROM admins WHERE is_active = true LIMIT 1")
@@ -129,7 +129,7 @@ Support Team`
       [ticketId, admin.id, statusMessage, JSON.stringify([]), false],
     )
 
-    console.log("Automated Messages: Status change message sent successfully")
+    //console.log("Automated Messages: Status change message sent successfully")
   } catch (error) {
     console.error("Automated Messages: Failed to send status change message:", error)
     // Don't throw error - automated messages are not critical

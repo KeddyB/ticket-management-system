@@ -3,11 +3,11 @@ import pool from "@/lib/db"
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    console.log("Customer Ticket API: Starting GET request for ticket:", params.id)
+    //console.log("Customer Ticket API: Starting GET request for ticket:", params.id)
 
     // Validate ticket ID format
     if (!params.id || !/^\d+$/.test(params.id)) {
-      console.log("Customer Ticket API: Invalid ticket ID format:", params.id)
+      //console.log("Customer Ticket API: Invalid ticket ID format:", params.id)
       return NextResponse.json({ error: "Invalid ticket ID" }, { status: 400 })
     }
 
@@ -39,7 +39,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
         [params.id],
       )
     } catch (error) {
-      console.log("Customer Ticket API: Categories table not found, using fallback")
+      //console.log("Customer Ticket API: Categories table not found, using fallback")
       result = await pool.query(
         `
         SELECT 
@@ -64,12 +64,12 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     }
 
     if (result.rows.length === 0) {
-      console.log("Customer Ticket API: Ticket not found:", params.id)
+      //console.log("Customer Ticket API: Ticket not found:", params.id)
       return NextResponse.json({ error: "Ticket not found" }, { status: 404 })
     }
 
     const ticket = result.rows[0]
-    console.log("Customer Ticket API: Found ticket:", ticket.id)
+    //console.log("Customer Ticket API: Found ticket:", ticket.id)
 
     const formattedTicket = {
       id: ticket.id,

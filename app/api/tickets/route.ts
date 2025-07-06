@@ -11,21 +11,21 @@ function generateTicketId(): string {
 
 export async function GET(request: NextRequest) {
   try {
-    console.log("Tickets API: Starting GET request")
+    //console.log("Tickets API: Starting GET request")
 
     const token = extractTokenFromRequest(request)
     if (!token) {
-      console.log("Tickets API: No token provided")
+      //console.log("Tickets API: No token provided")
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     const decoded = await verifyToken(token)
     if (!decoded) {
-      console.log("Tickets API: Invalid token")
+      //console.log("Tickets API: Invalid token")
       return NextResponse.json({ error: "Invalid token" }, { status: 401 })
     }
 
-    console.log("Tickets API: Authenticated admin:", decoded.email, "ID:", decoded.id)
+    //console.log("Tickets API: Authenticated admin:", decoded.email, "ID:", decoded.id)
 
     // First try with categories table
     let result
@@ -56,9 +56,9 @@ export async function GET(request: NextRequest) {
       `,
         [decoded.id],
       )
-      console.log("Tickets API: Query with categories successful, found tickets:", result.rows.length)
+      //console.log("Tickets API: Query with categories successful, found tickets:", result.rows.length)
     } catch (categoryError) {
-      console.log("Tickets API: Categories table not found, using fallback query")
+      //console.log("Tickets API: Categories table not found, using fallback query")
       // Fallback query without categories
       result = await pool.query(
         `
@@ -83,7 +83,7 @@ export async function GET(request: NextRequest) {
       `,
         [decoded.id],
       )
-      console.log("Tickets API: Fallback query successful, found tickets:", result.rows.length)
+      //console.log("Tickets API: Fallback query successful, found tickets:", result.rows.length)
     }
 
     const tickets = result.rows.map((ticket) => ({
@@ -104,7 +104,7 @@ export async function GET(request: NextRequest) {
       resolved_at: ticket.resolved_at,
     }))
 
-    console.log("Tickets API: Returning tickets:", tickets.length)
+    //console.log("Tickets API: Returning tickets:", tickets.length)
     return NextResponse.json(tickets)
   } catch (error) {
     console.error("Tickets API error:", error)
@@ -120,7 +120,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    console.log("Tickets API: Starting POST request")
+    //console.log("Tickets API: Starting POST request")
 
     const {
       title,
@@ -136,7 +136,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
     }
 
-    console.log("Tickets API: Creating ticket:", { title, customer_email, category_id })
+    //console.log("Tickets API: Creating ticket:", { title, customer_email, category_id })
 
     // Generate random ticket ID
     let ticketId = generateTicketId()
@@ -161,7 +161,7 @@ export async function POST(request: NextRequest) {
     if (category_id) {
       try {
         assignedAdminId = await autoAssignTicket(Number.parseInt(category_id.toString()))
-        console.log("Tickets API: Auto-assigned to admin:", assignedAdminId)
+        //console.log("Tickets API: Auto-assigned to admin:", assignedAdminId)
       } catch (error) {
         console.error("Tickets API: Auto-assignment failed:", error)
         // Continue without assignment if auto-assignment fails
@@ -188,12 +188,12 @@ export async function POST(request: NextRequest) {
     )
 
     const newTicket = result.rows[0]
-    console.log("Tickets API: Ticket created with ID:", newTicket.id, "assigned to:", assignedAdminId)
+    //console.log("Tickets API: Ticket created with ID:", newTicket.id, "assigned to:", assignedAdminId)
 
     // Send automated welcome message (don't wait for it)
     try {
       await sendAutomatedWelcomeMessage(ticketId)
-      console.log("Tickets API: Welcome message sent for ticket:", ticketId)
+      //console.log("Tickets API: Welcome message sent for ticket:", ticketId)
     } catch (error) {
       console.error("Tickets API: Failed to send welcome message:", error)
       // Don't fail the ticket creation if welcome message fails

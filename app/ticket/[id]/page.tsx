@@ -90,12 +90,12 @@ export default function CustomerTicketPage() {
   const fetchTicket = async () => {
     try {
       setError(null)
-      console.log("Customer: Fetching ticket:", ticketId)
+      //console.log("Customer: Fetching ticket:", ticketId)
 
       const response = await fetch(`/api/tickets/customer/${ticketId}`)
       if (response.ok) {
         const data = await response.json()
-        console.log("Customer: Ticket data:", data)
+        //console.log("Customer: Ticket data:", data)
         setTicket(data)
       } else {
         const errorData = await response.json()
@@ -122,12 +122,12 @@ export default function CustomerTicketPage() {
 
   const fetchMessages = async () => {
     try {
-      console.log("Customer: Fetching messages for ticket:", ticketId)
+      //console.log("Customer: Fetching messages for ticket:", ticketId)
 
       const response = await fetch(`/api/tickets/customer/${ticketId}/messages`)
       if (response.ok) {
         const data = await response.json()
-        console.log("Customer: Messages data:", data.length, "messages")
+        //console.log("Customer: Messages data:", data.length, "messages")
         setMessages(data)
       } else {
         const errorData = await response.json()
@@ -200,7 +200,7 @@ export default function CustomerTicketPage() {
     setAttachments([])
 
     try {
-      console.log("Customer: Sending message:", messageToSend.substring(0, 50) + "...")
+      //console.log("Customer: Sending message:", messageToSend.substring(0, 50) + "...")
 
       const response = await fetch(`/api/tickets/customer/${ticketId}/messages`, {
         method: "POST",
@@ -217,7 +217,7 @@ export default function CustomerTicketPage() {
 
       if (response.ok) {
         const newMsg = await response.json()
-        console.log("Customer: Message sent successfully:", newMsg.id)
+        //console.log("Customer: Message sent successfully:", newMsg.id)
 
         // Add message to list immediately
         setMessages((prev) => [...prev, newMsg])

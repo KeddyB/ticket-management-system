@@ -52,20 +52,20 @@ export function Conversation({ ticketId, isCustomerView = false }: ConversationP
   const fetchMessages = async () => {
     try {
       setError(null)
-      console.log("Conversation: Fetching messages for ticket:", ticketId, "isCustomerView:", isCustomerView)
+      //console.log("Conversation: Fetching messages for ticket:", ticketId, "isCustomerView:", isCustomerView)
 
       // Use different endpoints for admin vs customer
       const endpoint = isCustomerView
         ? `/api/tickets/customer/${ticketId}/messages`
         : `/api/tickets/${ticketId}/messages`
 
-      console.log("Conversation: Using endpoint:", endpoint)
+      //console.log("Conversation: Using endpoint:", endpoint)
 
       const response = await fetch(endpoint, {
         credentials: "include",
       })
 
-      console.log("Conversation: Response status:", response.status)
+      //console.log("Conversation: Response status:", response.status)
 
       if (!response.ok) {
         const errorData = await response.json()
@@ -74,7 +74,7 @@ export function Conversation({ ticketId, isCustomerView = false }: ConversationP
       }
 
       const data = await response.json()
-      console.log("Conversation: Fetched messages:", data.length, "messages")
+      //console.log("Conversation: Fetched messages:", data.length, "messages")
       setMessages(data)
     } catch (error) {
       console.error("Conversation: Error fetching messages:", error)
@@ -103,14 +103,14 @@ export function Conversation({ ticketId, isCustomerView = false }: ConversationP
     setNewMessage("")
 
     try {
-      console.log("Conversation: Sending message:", messageToSend.substring(0, 50) + "...")
+      //console.log("Conversation: Sending message:", messageToSend.substring(0, 50) + "...")
 
       // Use different endpoints for admin vs customer
       const endpoint = isCustomerView
         ? `/api/tickets/customer/${ticketId}/messages`
         : `/api/tickets/${ticketId}/messages`
 
-      console.log("Conversation: Sending to endpoint:", endpoint)
+      //console.log("Conversation: Sending to endpoint:", endpoint)
 
       const requestBody = isCustomerView
         ? {
@@ -125,10 +125,10 @@ export function Conversation({ ticketId, isCustomerView = false }: ConversationP
             is_internal: false,
           }
 
-      console.log("Conversation: Request body:", {
-        ...requestBody,
-        message: requestBody.message.substring(0, 50) + "...",
-      })
+      // console.log("Conversation: Request body:", {
+      //   ...requestBody,
+      //   message: requestBody.message.substring(0, 50) + "...",
+      // })
 
       const response = await fetch(endpoint, {
         method: "POST",
@@ -139,7 +139,7 @@ export function Conversation({ ticketId, isCustomerView = false }: ConversationP
         body: JSON.stringify(requestBody),
       })
 
-      console.log("Conversation: Send response status:", response.status)
+      //console.log("Conversation: Send response status:", response.status)
 
       if (!response.ok) {
         const errorData = await response.json()
@@ -158,7 +158,7 @@ export function Conversation({ ticketId, isCustomerView = false }: ConversationP
       }
 
       const newMsg = await response.json()
-      console.log("Conversation: Message sent successfully:", newMsg.id)
+      //console.log("Conversation: Message sent successfully:", newMsg.id)
 
       // Add the new message to the list immediately
       setMessages((prev) => [...prev, newMsg])

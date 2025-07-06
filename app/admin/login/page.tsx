@@ -67,7 +67,7 @@ export default function AdminLogin() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>Admin Login</CardTitle>
+          <CardTitle className="text-blue-600">Admin Login</CardTitle>
           <CardDescription>Sign in to access the admin dashboard</CardDescription>
         </CardHeader>
         <CardContent>
@@ -101,37 +101,14 @@ export default function AdminLogin() {
               </Alert>
             )}
 
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full bg-blue-600 text-white" disabled={loading}>
               {loading ? "Signing in…" : "Sign In"}
             </Button>
           </form>
 
-          <div className="mt-6">
-            <div className="text-sm font-medium text-gray-700 mb-2">Demo Accounts:</div>
-            <div className="grid grid-cols-2 gap-2">
-              {demoAccounts.map((account) => (
-                <Button
-                  key={account.email}
-                  variant="outline"
-                  size="sm"
-                  onClick={() => quickLogin(account.email)}
-                  disabled={loading}
-                  className="text-xs"
-                >
-                  {account.name}
-                </Button>
-              ))}
-            </div>
-            <div className="text-xs text-gray-500 mt-2">
-              Password for all: <code>admin123</code>
-            </div>
-          </div>
-
           <div className="mt-4 text-center">
             <p className="text-xs text-gray-500 mb-2">Having login issues?</p>
-            <Button asChild variant="link" size="sm">
-              <a href="/setup/fix-passwords">Fix Admin Passwords</a>
-            </Button>
+            
           </div>
         </CardContent>
       </Card>

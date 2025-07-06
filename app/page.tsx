@@ -139,7 +139,7 @@ export default function HomePage() {
               <Ticket className="h-8 w-8 text-blue-600 mr-3" />
               <h1 className="text-2xl font-bold text-gray-900">Support Center</h1>
             </div>
-            <Button asChild variant="outline">
+            <Button asChild variant="outline" className="bg-blue-600 text-white">
               <a href="/admin/login">Admin Login</a>
             </Button>
           </div>
@@ -302,7 +302,7 @@ export default function HomePage() {
                     />
                   </div>
 
-                  <Button type="submit" className="w-full" disabled={isSubmitting || categories.length === 0}>
+                  <Button type="submit" className="w-full bg-blue-600 text-white" disabled={isSubmitting || categories.length === 0}>
                     {isSubmitting ? "Submitting..." : "Submit Ticket"}
                   </Button>
                 </form>

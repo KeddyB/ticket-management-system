@@ -4,11 +4,11 @@ import { verifyToken, extractTokenFromRequest } from "@/lib/auth"
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    console.log("Messages API: Starting GET request for ticket:", params.id)
+    //console.log("Messages API: Starting GET request for ticket:", params.id)
 
     // Validate ticket ID format (should be 10 digits for new string IDs)
     if (!params.id || !/^\d+$/.test(params.id)) {
-      console.log("Messages API: Invalid ticket ID format:", params.id)
+      //console.log("Messages API: Invalid ticket ID format:", params.id)
       return NextResponse.json({ error: "Invalid ticket ID" }, { status: 400 })
     }
 
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       `,
         [params.id],
       )
-      console.log("Messages API: Found messages:", result.rows.length)
+      //console.log("Messages API: Found messages:", result.rows.length)
     } catch (error) {
       console.error("Messages API: Error querying ticket_comments:", error)
       return NextResponse.json([], { status: 200 })
@@ -78,7 +78,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       }
     })
 
-    console.log("Messages API: Returning messages:", messages.length)
+    //console.log("Messages API: Returning messages:", messages.length)
     return NextResponse.json(messages)
   } catch (error) {
     console.error("Messages API error:", error)
@@ -91,27 +91,27 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 
 export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    console.log("Messages API: Starting POST request for ticket:", params.id)
+    //console.log("Messages API: Starting POST request for ticket:", params.id)
 
     // Validate ticket ID format
     if (!params.id || !/^\d+$/.test(params.id)) {
-      console.log("Messages API: Invalid ticket ID format:", params.id)
+      //console.log("Messages API: Invalid ticket ID format:", params.id)
       return NextResponse.json({ error: "Invalid ticket ID" }, { status: 400 })
     }
 
     const token = extractTokenFromRequest(request)
     if (!token) {
-      console.log("Messages API: No token provided")
+      //console.log("Messages API: No token provided")
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     const decoded = await verifyToken(token)
     if (!decoded) {
-      console.log("Messages API: Invalid token")
+      //console.log("Messages API: Invalid token")
       return NextResponse.json({ error: "Invalid token" }, { status: 401 })
     }
 
-    console.log("Messages API: Authenticated admin:", decoded.email, "ID:", decoded.id)
+    //console.log("Messages API: Authenticated admin:", decoded.email, "ID:", decoded.id)
 
     // Parse request body with error handling
     let requestBody
@@ -128,20 +128,20 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       return NextResponse.json({ error: "Message is required" }, { status: 400 })
     }
 
-    console.log("Messages API: Message content:", message.substring(0, 100) + "...")
-    console.log("Messages API: Attachments count:", attachments.length)
+    //console.log("Messages API: Message content:", message.substring(0, 100) + "...")
+    //console.log("Messages API: Attachments count:", attachments.length)
 
     // Verify ticket exists
     const ticketCheck = await pool.query("SELECT id, customer_name, customer_email FROM tickets WHERE id = $1", [
       params.id,
     ])
     if (ticketCheck.rows.length === 0) {
-      console.log("Messages API: Ticket not found:", params.id)
+      //console.log("Messages API: Ticket not found:", params.id)
       return NextResponse.json({ error: "Ticket not found" }, { status: 404 })
     }
 
     const ticket = ticketCheck.rows[0]
-    console.log("Messages API: Found ticket:", ticket.id)
+    //console.log("Messages API: Found ticket:", ticket.id)
 
     // Safely stringify attachments
     let attachmentsJson = "[]"
@@ -171,7 +171,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     )
 
     const newMessage = result.rows[0]
-    console.log("Messages API: Message created with ID:", newMessage.id)
+    //console.log("Messages API: Message created with ID:", newMessage.id)
 
     // Update ticket's updated_at timestamp
     await pool.query("UPDATE tickets SET updated_at = CURRENT_TIMESTAMP WHERE id = $1", [params.id])
@@ -207,7 +207,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       sender_type: "admin",
     }
 
-    console.log("Messages API: Returning formatted message:", formattedMessage.id)
+    //console.log("Messages API: Returning formatted message:", formattedMessage.id)
     return NextResponse.json(formattedMessage, { status: 201 })
   } catch (error) {
     console.error("Messages API POST error:", error)

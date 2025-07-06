@@ -6,22 +6,22 @@ import { verifyToken, extractTokenFromRequest } from "@/lib/auth"
 // Admin-only endpoint for creating tickets from the dashboard
 export async function POST(request: NextRequest) {
   try {
-    console.log("Admin Tickets API POST: Starting request")
+    //console.log("Admin Tickets API POST: Starting request")
 
     const token = extractTokenFromRequest(request)
 
     if (!token) {
-      console.log("Admin Tickets API POST: No token provided")
+      //console.log("Admin Tickets API POST: No token provided")
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     const decoded = await verifyToken(token)
     if (!decoded) {
-      console.log("Admin Tickets API POST: Invalid token")
+      //console.log("Admin Tickets API POST: Invalid token")
       return NextResponse.json({ error: "Invalid token" }, { status: 401 })
     }
 
-    console.log("Admin Tickets API POST: Authenticated admin:", decoded.email)
+    //console.log("Admin Tickets API POST: Authenticated admin:", decoded.email)
 
     const {
       title,
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
       [title, description, customer_name, customer_email, customer_phone, category_id, assignedAdminId, priority],
     )
 
-    console.log("Admin Tickets API POST: Ticket created successfully")
+    //console.log("Admin Tickets API POST: Ticket created successfully")
     return NextResponse.json(result.rows[0], { status: 201 })
   } catch (error) {
     console.error("Admin create ticket error:", error)

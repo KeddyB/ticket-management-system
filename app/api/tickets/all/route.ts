@@ -4,23 +4,23 @@ import { verifyToken, extractTokenFromRequest } from "@/lib/auth"
 
 export async function GET(request: NextRequest) {
   try {
-    console.log("All Tickets API: Starting GET request")
+    //console.log("All Tickets API: Starting GET request")
 
     const token = extractTokenFromRequest(request)
-    console.log("All Tickets API: Token present:", !!token)
+    //console.log("All Tickets API: Token present:", !!token)
 
     if (!token) {
-      console.log("All Tickets API: No token provided")
+      //console.log("All Tickets API: No token provided")
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     const decoded = await verifyToken(token)
     if (!decoded) {
-      console.log("All Tickets API: Invalid token")
+      //console.log("All Tickets API: Invalid token")
       return NextResponse.json({ error: "Invalid token" }, { status: 401 })
     }
 
-    console.log("All Tickets API: Token verified for admin:", decoded.email)
+    //console.log("All Tickets API: Token verified for admin:", decoded.email)
 
     // Get ALL tickets in the database (for admin overview)
     let query = `
@@ -67,9 +67,9 @@ export async function GET(request: NextRequest) {
         ORDER BY t.created_at DESC
       `
       result = await pool.query(query)
-      console.log("All Tickets API: Query with categories successful")
+      //console.log("All Tickets API: Query with categories successful")
     } catch (error) {
-      console.log("All Tickets API: Categories table not found, using fallback")
+      //console.log("All Tickets API: Categories table not found, using fallback")
       query = `
         SELECT 
           t.id,
@@ -91,7 +91,7 @@ export async function GET(request: NextRequest) {
       result = await pool.query(query)
     }
 
-    console.log("All Tickets API: Found total tickets:", result.rows.length)
+    //console.log("All Tickets API: Found total tickets:", result.rows.length)
 
     // Transform the data to match frontend expectations
     const tickets = result.rows.map((ticket) => ({
@@ -112,7 +112,7 @@ export async function GET(request: NextRequest) {
       category_color: ticket.category_color,
     }))
 
-    console.log("All Tickets API: Returning all tickets:", tickets.length)
+    //console.log("All Tickets API: Returning all tickets:", tickets.length)
     return NextResponse.json(tickets)
   } catch (error) {
     console.error("Get all tickets error:", error)

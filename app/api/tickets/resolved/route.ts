@@ -4,23 +4,23 @@ import { verifyToken, extractTokenFromRequest } from "@/lib/auth"
 
 export async function GET(request: NextRequest) {
   try {
-    console.log("Resolved Tickets API: Starting request")
+    //console.log("Resolved Tickets API: Starting request")
 
     const token = extractTokenFromRequest(request)
-    console.log("Resolved Tickets API: Token present:", !!token)
+    //console.log("Resolved Tickets API: Token present:", !!token)
 
     if (!token) {
-      console.log("Resolved Tickets API: No token provided")
+      //console.log("Resolved Tickets API: No token provided")
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     const decoded = await verifyToken(token)
     if (!decoded) {
-      console.log("Resolved Tickets API: Invalid token")
+      //console.log("Resolved Tickets API: Invalid token")
       return NextResponse.json({ error: "Invalid token" }, { status: 401 })
     }
 
-    console.log("Resolved Tickets API: Token verified for admin:", decoded.email, "category_id:", decoded.category_id)
+    //console.log("Resolved Tickets API: Token verified for admin:", decoded.email, "category_id:", decoded.category_id)
 
     // Get resolved tickets for admin's category (or all tickets if admin has no specific category)
     let query = `
@@ -41,16 +41,16 @@ export async function GET(request: NextRequest) {
     if (decoded.category_id) {
       query += " AND t.category_id = $1"
       params = [decoded.category_id]
-      console.log("Resolved Tickets API: Filtering by category_id:", decoded.category_id)
+      //console.log("Resolved Tickets API: Filtering by category_id:", decoded.category_id)
     } else {
-      console.log("Resolved Tickets API: Admin has no specific category, showing all resolved tickets")
+      //console.log("Resolved Tickets API: Admin has no specific category, showing all resolved tickets")
     }
 
     query += " ORDER BY t.resolved_at DESC, t.updated_at DESC"
 
     const result = await pool.query(query, params)
 
-    console.log("Resolved Tickets API: Found resolved tickets:", result.rows.length)
+    //console.log("Resolved Tickets API: Found resolved tickets:", result.rows.length)
 
     return NextResponse.json(result.rows)
   } catch (error) {
