@@ -43,7 +43,6 @@ export default function HomePage() {
 
   const fetchCategories = async () => {
     try {
-      console.log("Fetching categories...")
       const response = await fetch("/api/categories")
 
       if (!response.ok) {
@@ -58,8 +57,6 @@ export default function HomePage() {
       }
 
       const data = await response.json()
-      console.log("Categories response:", data)
-
       // Handle both success and error responses
       if (data.error) {
         console.error("Categories API error:", data.error)

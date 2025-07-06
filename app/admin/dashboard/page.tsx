@@ -62,7 +62,6 @@ export default function AdminDashboard() {
 
   const checkAuthAndFetchData = async () => {
     try {
-      console.log("Dashboard: Checking authentication...")
 
       // Add Authorization header with token from localStorage as backup
       const token = localStorage.getItem("auth-token")
@@ -72,12 +71,8 @@ export default function AdminDashboard() {
       }
 
       const authResponse = await fetch("/api/auth/me", { headers })
-      console.log("Dashboard: Auth response status:", authResponse.status)
-
       if (authResponse.ok) {
         const authData = await authResponse.json()
-        console.log("Dashboard: Authentication successful for:", authData.admin?.email)
-
         // Update localStorage token if provided
         if (authData.token) {
           localStorage.setItem("auth-token", authData.token)
@@ -86,7 +81,6 @@ export default function AdminDashboard() {
         // Proceed to fetch data
         await Promise.all([fetchTickets(), fetchAdmins()])
       } else {
-        console.log("Dashboard: Authentication failed, redirecting to login")
         localStorage.removeItem("auth-token")
         router.push("/admin/login")
       }

@@ -3,8 +3,6 @@ import pool from "@/lib/db"
 
 export async function GET() {
   try {
-    console.log("Categories API: Starting request")
-
     // First, check if categories table exists and create it if it doesn't
     try {
       const result = await pool.query(`
@@ -13,11 +11,8 @@ export async function GET() {
         ORDER BY name
       `)
 
-      console.log("Categories API: Found categories:", result.rows.length)
       return NextResponse.json(result.rows)
     } catch (error: any) {
-      console.log("Categories API: Table might not exist, creating it...")
-
       // Create categories table if it doesn't exist
       await pool.query(`
         CREATE TABLE IF NOT EXISTS categories (
@@ -47,7 +42,6 @@ export async function GET() {
         ORDER BY name
       `)
 
-      console.log("Categories API: Created and returning categories:", newResult.rows.length)
       return NextResponse.json(newResult.rows)
     }
   } catch (error: any) {

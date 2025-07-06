@@ -9,20 +9,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Email and password are required" }, { status: 400 })
     }
 
-    console.log("Login attempt for:", email)
-
     const admin = await authenticateAdmin(email, password)
 
     if (!admin) {
-      console.log("Authentication failed for:", email)
       return NextResponse.json({ error: "Invalid credentials" }, { status: 401 })
     }
 
-    console.log("Authentication successful for:", admin.email)
-
     const token = await generateToken(admin)
-    console.log("Generated token for:", admin.email)
-
     // Create response with admin data
     const response = NextResponse.json({
       success: true,
@@ -44,8 +37,6 @@ export async function POST(request: NextRequest) {
       maxAge: 60 * 60 * 24, // 24 hours
       path: "/",
     })
-
-    console.log("Cookie set for:", admin.email)
 
     return response
   } catch (error) {

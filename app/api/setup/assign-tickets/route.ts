@@ -4,12 +4,8 @@ import { autoAssignTicket } from "@/lib/ticket-router"
 
 export async function POST() {
   try {
-    console.log("Setup: Starting ticket assignment process")
-
     // Get all unassigned tickets
     const unassignedTickets = await pool.query("SELECT id, category_id FROM tickets WHERE assigned_admin_id IS NULL")
-
-    console.log("Setup: Found unassigned tickets:", unassignedTickets.rows.length)
 
     let assignedCount = 0
     let failedCount = 0
@@ -21,14 +17,11 @@ export async function POST() {
         if (adminId) {
           await pool.query("UPDATE tickets SET assigned_admin_id = $1 WHERE id = $2", [adminId, ticket.id])
           assignedCount++
-          console.log(`Setup: Assigned ticket ${ticket.id} to admin ${adminId}`)
         } else {
           failedCount++
-          console.log(`Setup: Failed to assign ticket ${ticket.id} - no available admin`)
         }
       } catch (error) {
         failedCount++
-        console.error(`Setup: Error assigning ticket ${ticket.id}:`, error)
       }
     }
 
@@ -44,7 +37,6 @@ export async function POST() {
       activeAdmins: activeAdmins,
     })
   } catch (error) {
-    console.error("Setup: Ticket assignment error:", error)
     return NextResponse.json(
       {
         error: "Failed to assign tickets",

@@ -4,11 +4,8 @@ import bcrypt from "bcryptjs"
 
 export async function POST() {
   try {
-    console.log("Starting password fix...")
-
     // Hash the password 'admin123' properly
     const passwordHash = await bcrypt.hash("admin123", 10)
-    console.log("Generated password hash:", passwordHash)
 
     // First, let's see what admins exist
     const existingAdmins = await pool.query("SELECT id, email, name FROM admins")
@@ -20,7 +17,6 @@ export async function POST() {
       [passwordHash],
     )
 
-    console.log("Update result:", updateResult.rowCount, "rows updated")
 
     // If no rows were updated, create a test admin
     if (updateResult.rowCount === 0) {

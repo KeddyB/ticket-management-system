@@ -29,8 +29,6 @@ export default function AdminLogin() {
     setError("")
 
     try {
-      console.log("Attempting login for:", email)
-
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -38,15 +36,12 @@ export default function AdminLogin() {
       })
 
       const data = await res.json()
-      console.log("Login response:", { status: res.status, success: data.success })
 
       if (res.ok && data.success) {
-        console.log("Login successful, storing token and redirecting...")
 
         // Store token in localStorage as backup
         if (data.token) {
           localStorage.setItem("auth-token", data.token)
-          console.log("Token stored in localStorage")
         }
 
         // Small delay to ensure cookie is set
@@ -54,11 +49,9 @@ export default function AdminLogin() {
           router.push("/admin/dashboard")
         }, 100)
       } else {
-        console.log("Login failed:", data.error)
         setError(data.error || "Login failed")
       }
     } catch (error) {
-      console.error("Login error:", error)
       setError("Network error. Please try again.")
     } finally {
       setLoading(false)

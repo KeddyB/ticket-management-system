@@ -70,8 +70,6 @@ export default function AllTicketsPage() {
 
   const checkAuthAndFetchData = async () => {
     try {
-      console.log("All Tickets: Checking authentication...")
-
       const token = localStorage.getItem("auth-token")
       const headers: HeadersInit = {}
       if (token) {
@@ -79,11 +77,8 @@ export default function AllTicketsPage() {
       }
 
       const authResponse = await fetch("/api/auth/me", { headers })
-      console.log("All Tickets: Auth response status:", authResponse.status)
-
       if (authResponse.ok) {
         const authData = await authResponse.json()
-        console.log("All Tickets: Authentication successful for:", authData.admin?.email)
         setCurrentAdmin(authData.admin)
 
         if (authData.token) {
@@ -92,12 +87,10 @@ export default function AllTicketsPage() {
 
         await Promise.all([fetchAllTickets(), fetchAdmins()])
       } else {
-        console.log("All Tickets: Authentication failed, redirecting to login")
         localStorage.removeItem("auth-token")
         router.push("/admin/login")
       }
     } catch (error) {
-      console.error("All Tickets: Auth check error:", error)
       localStorage.removeItem("auth-token")
       router.push("/admin/login")
     } finally {
@@ -117,7 +110,6 @@ export default function AllTicketsPage() {
       if (response.ok) {
         const data = await response.json()
         setTickets(data)
-        console.log("All Tickets: Fetched tickets:", data.length)
       } else if (response.status === 401) {
         localStorage.removeItem("auth-token")
         router.push("/admin/login")

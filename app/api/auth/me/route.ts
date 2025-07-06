@@ -4,25 +4,16 @@ import pool from "@/lib/db"
 
 export async function GET(request: NextRequest) {
   try {
-    console.log("Auth ME: Starting auth check")
-
     const token = extractTokenFromRequest(request)
-    console.log("Auth ME: Token present:", !!token)
-    console.log("Auth ME: Token preview:", token ? token.substring(0, 20) + "..." : "none")
 
     if (!token) {
-      console.log("Auth ME: No token found in request")
       return NextResponse.json({ error: "No token provided" }, { status: 401 })
     }
 
-    console.log("Auth ME: Verifying token...")
     const decoded = await verifyToken(token)
     if (!decoded) {
-      console.log("Auth ME: Token verification failed")
       return NextResponse.json({ error: "Invalid token" }, { status: 401 })
     }
-
-    console.log("Auth ME: Token verified for admin ID:", decoded.id)
 
     // Get admin details from database
     const result = await pool.query(
@@ -31,19 +22,16 @@ export async function GET(request: NextRequest) {
     )
 
     if (result.rows.length === 0) {
-      console.log("Auth ME: Admin not found or inactive")
       return NextResponse.json({ error: "Admin not found" }, { status: 404 })
     }
 
     const admin = result.rows[0]
-    console.log("Auth ME: Auth successful for:", admin.email)
 
     return NextResponse.json({
       admin: admin,
       token: token, // Include token in response for client-side storage
     })
   } catch (error) {
-    console.error("Auth ME: Error:", error)
     return NextResponse.json(
       {
         error: "Internal server error",
