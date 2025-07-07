@@ -73,8 +73,11 @@ export default function CustomerTicketPage() {
     if (ticketId) {
       fetchTicket()
       fetchMessages()
-      // Poll for new messages every 10 seconds
-      const interval = setInterval(fetchMessages, 10000)
+      // Poll for updates every 10 seconds to catch status changes
+      const interval = setInterval(() => {
+        fetchTicket()
+        fetchMessages()
+      }, 10000)
       return () => clearInterval(interval)
     }
   }, [ticketId])
@@ -90,12 +93,12 @@ export default function CustomerTicketPage() {
   const fetchTicket = async () => {
     try {
       setError(null)
-      //console.log("Customer: Fetching ticket:", ticketId)
+      console.log("Customer: Fetching ticket:", ticketId)
 
       const response = await fetch(`/api/tickets/customer/${ticketId}`)
       if (response.ok) {
         const data = await response.json()
-        //console.log("Customer: Ticket data:", data)
+        console.log("Customer: Ticket data:", data)
         setTicket(data)
       } else {
         const errorData = await response.json()
@@ -122,12 +125,12 @@ export default function CustomerTicketPage() {
 
   const fetchMessages = async () => {
     try {
-      //console.log("Customer: Fetching messages for ticket:", ticketId)
+      console.log("Customer: Fetching messages for ticket:", ticketId)
 
       const response = await fetch(`/api/tickets/customer/${ticketId}/messages`)
       if (response.ok) {
         const data = await response.json()
-        //console.log("Customer: Messages data:", data.length, "messages")
+        console.log("Customer: Messages data:", data.length, "messages")
         setMessages(data)
       } else {
         const errorData = await response.json()
@@ -140,9 +143,23 @@ export default function CustomerTicketPage() {
     }
   }
 
+  const isTicketClosed = () => {
+    return ticket?.status === "closed" || ticket?.status === "resolved"
+  }
+
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (!file) return
+
+    // Check if ticket allows messaging
+    if (isTicketClosed()) {
+      toast({
+        title: "Cannot upload file",
+        description: "This ticket is closed and no longer accepts new messages",
+        variant: "destructive",
+      })
+      return
+    }
 
     setIsUploading(true)
 
@@ -191,6 +208,16 @@ export default function CustomerTicketPage() {
   const sendMessage = async () => {
     if (!newMessage.trim() && attachments.length === 0) return
 
+    // Check if ticket allows messaging
+    if (isTicketClosed()) {
+      toast({
+        title: "Cannot send message",
+        description: "This ticket is closed and no longer accepts new messages",
+        variant: "destructive",
+      })
+      return
+    }
+
     setIsSending(true)
     const messageToSend = newMessage.trim()
     const attachmentsToSend = [...attachments]
@@ -200,7 +227,7 @@ export default function CustomerTicketPage() {
     setAttachments([])
 
     try {
-      //console.log("Customer: Sending message:", messageToSend.substring(0, 50) + "...")
+      console.log("Customer: Sending message:", messageToSend.substring(0, 50) + "...")
 
       const response = await fetch(`/api/tickets/customer/${ticketId}/messages`, {
         method: "POST",
@@ -217,13 +244,16 @@ export default function CustomerTicketPage() {
 
       if (response.ok) {
         const newMsg = await response.json()
-        //console.log("Customer: Message sent successfully:", newMsg.id)
+        console.log("Customer: Message sent successfully:", newMsg.id)
 
         // Add message to list immediately
         setMessages((prev) => [...prev, newMsg])
 
-        // Refresh messages after a short delay to get any automated responses
-        setTimeout(fetchMessages, 1000)
+        // Refresh messages and ticket status after a short delay
+        setTimeout(() => {
+          fetchMessages()
+          fetchTicket()
+        }, 1000)
 
         toast({
           title: "Message sent",
@@ -353,6 +383,33 @@ export default function CustomerTicketPage() {
         </div>
       </div>
 
+      {/* Status Alert for Closed/Resolved Tickets */}
+      {isTicketClosed() && (
+        <div className="bg-white border-b border-gray-200">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div
+              className={`rounded-lg p-4 ${ticket.status === "resolved" ? "bg-green-50 border border-green-200" : "bg-gray-50 border border-gray-200"}`}
+            >
+              <div className="flex items-start space-x-3">
+                <div className={`flex-shrink-0 ${ticket.status === "resolved" ? "text-green-600" : "text-gray-600"}`}>
+                  <Clock className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-gray-900">
+                    {ticket.status === "resolved" ? "Ticket Resolved" : "Ticket Closed"}
+                  </h3>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {ticket.status === "resolved"
+                      ? "This ticket has been marked as resolved. If you need further assistance, please create a new ticket."
+                      : "This ticket has been closed. If you need further assistance, please create a new ticket."}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Ticket Details */}
@@ -398,7 +455,9 @@ export default function CustomerTicketPage() {
               <CardHeader>
                 <CardTitle>Conversation</CardTitle>
                 <p className="text-sm text-gray-500">
-                  Chat with our support team about your ticket. We'll respond as soon as possible.
+                  {isTicketClosed()
+                    ? "This conversation is now closed. Create a new ticket for further assistance."
+                    : "Chat with our support team about your ticket. We'll respond as soon as possible."}
                 </p>
               </CardHeader>
               <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
@@ -468,85 +527,108 @@ export default function CustomerTicketPage() {
 
                 {/* Message Input */}
                 <div className="border-t border-gray-200 p-4 bg-white">
-                  {/* Attachments Preview */}
-                  {attachments.length > 0 && (
-                    <div className="mb-3 space-y-2">
-                      {attachments.map((attachment) => (
-                        <div key={attachment.id} className="flex items-center justify-between bg-gray-50 p-2 rounded">
-                          <div className="flex items-center space-x-2 min-w-0 flex-1">
-                            {getFileIcon(attachment.type)}
-                            <span className="text-sm truncate">{attachment.name}</span>
-                            <span className="text-xs text-gray-500 flex-shrink-0">
-                              ({formatFileSize(attachment.size)})
-                            </span>
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => removeAttachment(attachment.id)}
-                            className="flex-shrink-0"
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  <div className="flex items-start space-x-3">
-                    <Avatar className="w-8 h-8 flex-shrink-0">
-                      <AvatarFallback className="text-sm">{getInitials(ticket.customer_name)}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <Textarea
-                        placeholder="Type your message..."
-                        value={newMessage}
-                        onChange={(e) => setNewMessage(e.target.value)}
-                        rows={3}
-                        className="resize-none"
-                        disabled={isSending}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" && !e.shiftKey) {
-                            e.preventDefault()
-                            sendMessage()
-                          }
-                        }}
-                      />
-                      <div className="flex items-center justify-between mt-2">
-                        <div className="flex items-center space-x-2">
-                          <input
-                            type="file"
-                            ref={fileInputRef}
-                            onChange={handleFileUpload}
-                            className="hidden"
-                            accept="image/*,.pdf,.doc,.docx,.txt,.xls,.xlsx"
-                            title="Upload file"
-                            placeholder="Upload file"
-                          />
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => fileInputRef.current?.click()}
-                            disabled={isUploading}
-                          >
-                            {isUploading ? (
-                              <Upload className="w-4 h-4 animate-spin" />
-                            ) : (
-                              <Paperclip className="w-4 h-4" />
-                            )}
-                          </Button>
-                        </div>
-                        <Button
-                          size="sm"
-                          onClick={sendMessage}
-                          disabled={isSending || (!newMessage.trim() && attachments.length === 0)}
-                        >
-                          <Send className="w-4 h-4 mr-2" />
-                          {isSending ? "Sending..." : "Send"}
-                        </Button>
+                  {isTicketClosed() ? (
+                    <div className="text-center py-4">
+                      <div
+                        className={`inline-flex items-center px-4 py-2 rounded-lg ${ticket.status === "resolved" ? "bg-green-50 text-green-700 border border-green-200" : "bg-gray-50 text-gray-700 border border-gray-200"}`}
+                      >
+                        <Clock className="h-4 w-4 mr-2" />
+                        <span className="text-sm font-medium">
+                          This ticket is {ticket.status}. No new messages can be sent.
+                        </span>
                       </div>
+                      <p className="text-sm text-gray-500 mt-2">
+                        Need more help?{" "}
+                        <a href="/" className="text-blue-600 hover:text-blue-800 underline">
+                          Create a new ticket
+                        </a>
+                      </p>
                     </div>
-                  </div>
+                  ) : (
+                    <>
+                      {/* Attachments Preview */}
+                      {attachments.length > 0 && (
+                        <div className="mb-3 space-y-2">
+                          {attachments.map((attachment) => (
+                            <div
+                              key={attachment.id}
+                              className="flex items-center justify-between bg-gray-50 p-2 rounded"
+                            >
+                              <div className="flex items-center space-x-2 min-w-0 flex-1">
+                                {getFileIcon(attachment.type)}
+                                <span className="text-sm truncate">{attachment.name}</span>
+                                <span className="text-xs text-gray-500 flex-shrink-0">
+                                  ({formatFileSize(attachment.size)})
+                                </span>
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removeAttachment(attachment.id)}
+                                className="flex-shrink-0"
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      <div className="flex items-start space-x-3">
+                        <Avatar className="w-8 h-8 flex-shrink-0">
+                          <AvatarFallback className="text-sm">{getInitials(ticket.customer_name)}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <Textarea
+                            placeholder="Type your message..."
+                            value={newMessage}
+                            onChange={(e) => setNewMessage(e.target.value)}
+                            rows={3}
+                            className="resize-none"
+                            disabled={isSending}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" && !e.shiftKey) {
+                                e.preventDefault()
+                                sendMessage()
+                              }
+                            }}
+                          />
+                          <div className="flex items-center justify-between mt-2">
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="file"
+                                ref={fileInputRef}
+                                onChange={handleFileUpload}
+                                className="hidden"
+                                accept="image/*,.pdf,.doc,.docx,.txt,.xls,.xlsx"
+                                title="input"
+                              />
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => fileInputRef.current?.click()}
+                                disabled={isUploading}
+                              >
+                                {isUploading ? (
+                                  <Upload className="w-4 h-4 animate-spin" />
+                                ) : (
+                                  <Paperclip className="w-4 h-4" />
+                                )}
+                              </Button>
+                            </div>
+                            <Button
+                              size="sm"
+                              onClick={sendMessage}
+                              disabled={isSending || (!newMessage.trim() && attachments.length === 0)}
+                            >
+                              <Send className="w-4 h-4 mr-2" />
+                              {isSending ? "Sending..." : "Send"}
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
               </CardContent>
             </Card>
